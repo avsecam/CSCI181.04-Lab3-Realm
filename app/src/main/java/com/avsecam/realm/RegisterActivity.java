@@ -11,6 +11,10 @@ import org.androidannotations.annotations.Click;
 import org.androidannotations.annotations.EActivity;
 import org.androidannotations.annotations.ViewById;
 
+import java.util.UUID;
+
+import io.realm.Realm;
+
 
 @EActivity(R.layout.activity_register)
 public class RegisterActivity extends AppCompatActivity {
@@ -20,11 +24,13 @@ public class RegisterActivity extends AppCompatActivity {
 
     private SharedPreferences sharedPreferences;
     private SharedPreferences.Editor editor;
+    private Realm realm;
 
     @AfterViews
     protected void init() {
         sharedPreferences = getSharedPreferences(getString(R.string.SHAREDPREFERENCES_NAME), MODE_PRIVATE);
         editor = sharedPreferences.edit();
+        realm = Realm.getDefaultInstance();
     }
 
     @Click(R.id.buttonSave)
@@ -32,14 +38,26 @@ public class RegisterActivity extends AppCompatActivity {
         String username = usernameField.getText().toString();
         String password = passwordField.getText().toString();
         String confirmPassword = confirmPasswordField.getText().toString();
+        
+        // Check if username is already taken
+        boolean userExists = realm.where(User.class).equalTo("name", username).findFirst() != null;
+        if (userExists) {
+            Toast.makeText(this, "User already exists.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
         // Check if all fields have values
         if (username.length() > 0 && password.length() > 0 && confirmPassword.length() > 0) {
             // Check if both passwords typed are equal
             if (password.equals(confirmPassword)) {
-                editor.putString(getString(R.string.USERNAME_KEY), username);
-                editor.putString(getString(R.string.PASSWORD_KEY), password);
-                editor.commit();
-                Toast.makeText(this, "Credentials saved.", Toast.LENGTH_SHORT).show();
+                realm.executeTransaction(realm -> {
+                    User newUser = realm.createObject(User.class);
+                    newUser.setUuid(UUID.randomUUID().toString());
+                    newUser.setName(username);
+                    newUser.setPassword(password);
+                });
+                int userCount = realm.where(User.class).findAll().size();
+                Toast.makeText(this, "New User saved. Total: " + userCount, Toast.LENGTH_SHORT).show();
                 finish();
             } else {
                 Toast.makeText(this, "Passwords do not match!", Toast.LENGTH_SHORT).show();
