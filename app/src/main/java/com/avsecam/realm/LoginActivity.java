@@ -50,7 +50,8 @@ public class LoginActivity extends AppCompatActivity {
             if (password.equals(savedPassword)) {
                 // Save uuid to sharedPreferences
                 String savedUuid = realm.where(User.class).equalTo(getString(R.string.USERNAME_KEY), username).findFirst().getUuid();
-
+                editor.putString(getString(R.string.UUID_KEY), savedUuid);
+                editor.apply();
                 // Go to landing page
                 Intent intent = new Intent(this, LandingActivity_.class);
                 startActivity(intent);
@@ -72,7 +73,7 @@ public class LoginActivity extends AppCompatActivity {
     public void onClearButtonPressed() {
         if (sharedPreferences.contains(getString(R.string.UUID_KEY)) || sharedPreferences.contains(getString(R.string.REMEMBERME_KEY))) {
             editor.clear();
-            editor.commit();
+            editor.apply();
             Toast.makeText(this, "SharedPreferences cleared.", Toast.LENGTH_SHORT).show();
         } else {
             Toast.makeText(this, "Nothing to clear.", Toast.LENGTH_SHORT).show();
@@ -83,7 +84,7 @@ public class LoginActivity extends AppCompatActivity {
     @Click(R.id.checkBoxRememberMe)
     public void onRememberMeCheckboxToggled() {
         editor.putBoolean(getString(R.string.REMEMBERME_KEY), rememberMeCheckBox.isChecked());
-        editor.commit();
+        editor.apply();
     }
 
     private boolean checkForCredentials(String username) {
