@@ -50,13 +50,13 @@ public class RegisterActivity extends AppCompatActivity {
         if (username.length() > 0 && password.length() > 0 && confirmPassword.length() > 0) {
             // Check if both passwords typed are equal
             if (password.equals(confirmPassword)) {
-                realm.executeTransaction(realm -> {
+                realm.executeTransactionAsync(realm -> {
                     User newUser = realm.createObject(User.class);
                     newUser.setUuid(UUID.randomUUID().toString());
                     newUser.setName(username);
                     newUser.setPassword(password);
                 });
-                int userCount = realm.where(User.class).findAll().size();
+                int userCount = realm.where(User.class).findAll().size() + 1;
                 Toast.makeText(this, "New User saved. Total: " + userCount, Toast.LENGTH_SHORT).show();
                 finish();
             } else {
